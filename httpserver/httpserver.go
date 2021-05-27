@@ -12,26 +12,38 @@ func HTTPServer(baseOutPath, chunkListFilename, serveHttpAddr string, log *logru
 		w.Write([]byte(`<html lang="en">
 				<head>
 					<meta charset=utf-8/>
-					<link href="https://unpkg.com/video.js/dist/video-js.min.css" rel="stylesheet">
-					<script src="https://unpkg.com/video.js/dist/video.min.js"></script>
+					<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 				</head>
 				<body>
 				<video
 					id="my-player"
-					class="video-js"
+					autoplay
+					loop
+					muted="muted"
 					controls
-					preload="auto"
-					poster=""
+					style="border: 5px solid #000"
 					data-setup='{}'>
-				<source  src="/video/` + chunkListFilename + `" type="application/x-mpegURL"></source>
-				<p class="vjs-no-js">
-					To view this video please enable JavaScript, and consider upgrading to a
-					web browser that
-					<a href="https://videojs.com/html5-video-support/" target="_blank">
-					supports HTML5 video
-					</a>
-				</p>
 				</video>
+				<script>
+					var link = "/video/`+ chunkListFilename + `";
+					var video = document.querySelector('#my-player');
+					video.src = link;
+
+					if (Hls.isSupported()) {
+					var hls = new Hls();
+					hls.loadSource(link);
+					hls.attachMedia(video);
+					hls.on(Hls.Events.MANIFEST_PARSED, function () {
+						video.play();
+					});
+					}
+					else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+					video.src = link;
+					video.addEventListener('loadedmetadata', function () {
+						video.play();
+					});
+					}
+				</script>
 				</body>
 			</html>`))
 	})
