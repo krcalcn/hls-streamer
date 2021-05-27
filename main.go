@@ -4,6 +4,8 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"io/ioutil"
+	"path"
 
 	"github.com/covrom/hls-streamer/hls"
 	"github.com/covrom/hls-streamer/httpserver"
@@ -22,7 +24,7 @@ var (
 	baseOutPath        = flag.String("p", "./results", "Output path")
 	chunkBaseFilename  = flag.String("f", "chunk_", "Chunks base filename")
 	chunkListFilename  = flag.String("cf", "chunklist.m3u8", "Chunklist filename")
-	targetSegmentDurS  = flag.Float64("t", 4.0, "Target chunk duration in seconds")
+	targetSegmentDurS  = flag.Float64("t", 1.0, "Target chunk duration in seconds")
 	liveWindowSize     = flag.Int("w", 3, "Live window size in chunks")
 	lhlsAdvancedChunks = flag.Int("l", 0, "If > 0 activates LHLS, and it indicates the number of advanced chunks to create")
 	manifestTypeInt    = flag.Int("m", int(hls.LiveWindow), "Manifest to generate (0- Vod, 1- Live event, 2- Live sliding window")
@@ -41,6 +43,15 @@ func main() {
 	flag.Parse()
 
 	var log = logger.ConfigureLogger(*verbose)
+
+
+	dir, err2 := ioutil.ReadDir("./results/")
+	if err2 != nil {
+		log.Fatal("Cannot read ./results: ", err2)
+	}
+	for _, d := range dir {
+			os.RemoveAll(path.Join([]string{"results", d.Name()}...))
+	}
 
 	log.Info(manifestgenerator.Version)
 	log.Info("Started tssegmenter")

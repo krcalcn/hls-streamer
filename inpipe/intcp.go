@@ -4,6 +4,8 @@ import (
 	"io"
 	"net"
 	"os"
+	"io/ioutil"
+	"path"
 
 	"github.com/sirupsen/logrus"
 	"github.com/covrom/hls-streamer/manifestgenerator"
@@ -28,6 +30,14 @@ func InTCP(serveTCP string, readBufferSize int, mg *manifestgenerator.ManifestGe
 
 				if n == 0 && err == io.EOF {
 					log.Info("Closing process detected EOF")
+					dir, err2 := ioutil.ReadDir("./results/")
+					if err2 != nil {
+						log.Fatal(err2)
+						break
+					}
+					for _, d := range dir {
+							os.RemoveAll(path.Join([]string{"results", d.Name()}...))
+					}
 					break
 				}
 

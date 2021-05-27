@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strconv"
+	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/covrom/hls-streamer/hls"
@@ -489,6 +491,11 @@ func (mg *ManifestGenerator) closeChunk(isInit bool, chunkDurationS float64, isF
 	return
 }
 
+func padNumberWithZero(value uint64, numZeros int) string {
+	format := "%0" + strconv.Itoa(numZeros) + "d"
+	return fmt.Sprintf(format, value)
+}
+
 func (mg *ManifestGenerator) createChunk(isInit bool) {
 	// Close current
 	if isInit {
@@ -541,6 +548,10 @@ func (mg *ManifestGenerator) createChunk(isInit bool) {
 			}
 
 			newChunk := mediachunk.New(mg.currentChunkIndex+uint64(len(mg.currentChunks)), chunkOptions)
+
+			if int(mg.currentChunkIndex) >= int(mg.options.liveWindowSize) {
+				os.Remove(path.Join(chunkOptions.BasePath, chunkOptions.ChunkBaseFilename+padNumberWithZero(mg.currentChunkIndex - uint64(mg.options.liveWindowSize), chunkOptions.FileNumberLength)+chunkOptions.FileExtension))
+			}
 
 			err := newChunk.InitializeChunk()
 			if err != nil {
